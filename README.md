@@ -4,6 +4,9 @@ This repository contains a basic FastAPI backend and a React (Next.js) frontend.
 
 **The Goal:** The agent successfully uses a "web_search" tool, but the implementation is buggy and provides a poor user experience. Your job is to fix the schema issues and upgrade the system to support real-time streaming of "thoughts" and answers.
 
+# IMPORT Preq
+google your google ai studio, find your api key and set in your .env 
+
 ## 1. Python Backend Task (25 Minutes)
 
 **Scenario:** The agent uses a `web_search` tool. However, it often fails to use it correctly or crashes. Additionally, the user has to wait ~3 seconds staring at a spinner before seeing any text.
