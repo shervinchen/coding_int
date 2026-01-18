@@ -1,11 +1,17 @@
-type ThoughtProps = {
-  // TODO: Define props for the thought trace
+import './ThoughtTrace.css';
+
+type ThoughtTraceProps = {
+  status: string;
+  isThinking: boolean;
 };
 
-export default function ThoughtTrace(props: ThoughtProps) {
+const ThoughtTrace: React.FC<ThoughtTraceProps> = ({ status, isThinking }) => {
   return (
-    <div className="thought-trace">
-      {/* Placeholder */}
+    <div className={`thought-trace ${isThinking ? 'thinking' : ''}`}>
+      <span>{status}</span>
+      {isThinking && <div className="spinner"></div>}
     </div>
   );
-}
+};
+
+export default ThoughtTrace;

@@ -5,34 +5,45 @@ type Message = {
   content: string;
 };
 
-export function useChat() {
+export function useChat(endpoint: string) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [thoughtTrace, setThoughtTrace] = useState<{ status: string; isThinking: boolean }>({ status: '', isThinking: false });
 
-  const sendMessage = useCallback(async (text: string) => {
-    if (!text.trim()) return;
+  const sendMessage = (message: string) => {
+    setMessages((prev) => [...prev, { role: 'user', content: message }]);
+    setIsLoading(true);
+    setThoughtTrace({ status: 'Thinking...', isThinking: true });
 
-    setLoading(true);
-    setMessages(prev => [...prev, { role: 'user', content: text }]);
+    const eventSource = new EventSource(`${endpoint}?message=${encodeURIComponent(message)}`);
+    let assistantContent = '';
 
-    try {
-      const response = await fetch('http://localhost:8000/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text }),
+    eventSource.onmessage = (event) => {
+      const chunk = event.data;
+      assistantContent += chunk;
+      setMessages((prev) => {
+        const newMessages = [...prev];
+        const lastMessage = newMessages[newMessages.length - 1];
+        if (lastMessage?.role === 'assistant') {
+          lastMessage.content = assistantContent;
+        } else {
+          newMessages.push({ role: 'assistant', content: assistantContent });
+        }
+        return newMessages;
       });
+      if (chunk.includes('[END]')) {
+        setIsLoading(false);
+        setThoughtTrace({ status: 'Completed', isThinking: false });
+        eventSource.close();
+      }
+    };
 
-      const data = await response.json();
+    eventSource.onerror = () => {
+      setIsLoading(false);
+      setThoughtTrace({ status: 'Error', isThinking: false });
+      eventSource.close();
+    };
+  };
 
-      setMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
-
-    } catch (error) {
-      console.error("Chat error:", error);
-      setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, something went wrong." }]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return { messages, sendMessage, loading };
+  return { messages, isLoading, thoughtTrace, sendMessage };
 }

@@ -1,16 +1,16 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { useChat } from './hooks/useChat';
-// import ThoughtTrace from './components/ThoughtTrace'; // Uncomment when implemented
+import ThoughtTrace from './components/ThoughtTrace';
 
 export default function Home() {
-  const { messages, sendMessage, loading } = useChat();
+  const { messages, sendMessage, thoughtTrace, isLoading } = useChat('http://localhost:8000/chat');
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || loading) return;
+    if (!input.trim() || thoughtTrace.isThinking) return;
     sendMessage(input);
     setInput('');
   };
@@ -35,13 +35,14 @@ export default function Home() {
           </div>
         ))}
 
-        {loading && (
+        {isLoading && (
           <div style={{ color: '#94a3b8', fontStyle: 'italic', paddingLeft: '1rem' }}>
             Agent is thinking... (This can take a while)
           </div>
         )}
 
         {/* TASK: Render the ThoughtTrace component here when active */}
+        <ThoughtTrace status={thoughtTrace.status} isThinking={thoughtTrace.isThinking} />。
 
         <div ref={messagesEndRef} />
       </div>
@@ -52,10 +53,10 @@ export default function Home() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask me a question..."
-            disabled={loading}
+            disabled={isLoading}
           />
-          <button type="submit" disabled={loading}>
-            {loading ? '...' : 'Send'}
+          <button type="submit" disabled={isLoading}>
+            {isLoading ? '...' : 'Send'}
           </button>
         </div>
       </form>
